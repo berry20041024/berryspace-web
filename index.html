@@ -4,47 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Berry's Space</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1e1e2e;
-            color: #cdd6f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .card {
-            background-color: #313244;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            max-width: 500px;
-        }
-
-        h1 {
-            color: #89b4fa;
-            margin-bottom: 10px;
-        }
-
-        p {
-            line-height: 1.6;
-            font-size: 1.1em;
-        }
-    </style>
+    <title>BERRYSPACE // DATABASE LINK</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 
 <body>
-    <div class="card">
-        <h1>歡迎來到Berry's Space</h1>
-        <p>網域連線測試成功！</p>
-        <p>這是一塊全新的開發基地</p>
+    <div class="console-container">
+        <h1 class="main-title">BerrySpace</h1>
+        <p>資料庫狀態：<span id="db-status">連線中...</span></p>
+
+        <input type="text" id="userInput" placeholder="輸入要存入雲端的數據...">
+        <button id="saveBtn" class="project-card">傳送至 Firebase</button>
     </div>
+
+    <script type="module" src="script.js"></script>
 </body>
 
 </html>
