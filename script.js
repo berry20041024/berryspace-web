@@ -1,4 +1,4 @@
-// 1. 引入 Firebase 核心與 Firestore 模組 (加入 serverTimestamp)
+// 1. 引入 Firebase 核心與 Firestore 模組
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
     getFirestore,
@@ -11,7 +11,7 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// 2. 你的專屬 Firebase 設定檔
+// 2. 你的 Firebase 設定檔
 const firebaseConfig = {
     apiKey: "AIzaSyC458PR1_J-nR0dCo7wxadj8Ov0qdIsFOY",
     authDomain: "berryspace-database.firebaseapp.com",
@@ -26,64 +26,66 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 4. 取得畫面的 DOM 元素 (請確保 HTML 中有這些 ID)
+// 4. 取得畫面的 DOM 元素
 const chatWindow = document.getElementById("chat-window");
 const messageInput = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 
-// 5. 實作「即時監聽」功能 (讀取)
-// 這裡使用了你引入的 limit，只抓取最新的 50 筆訊息，並依照時間舊到新排序
+// 5. 即時監聽與顯示訊息 (抓取最新 50 筆)
 const messagesRef = collection(db, "messages");
 const q = query(messagesRef, orderBy("createdAt", "asc"), limit(50));
 
 onSnapshot(q, (snapshot) => {
-    chatWindow.innerHTML = ""; // 每次更新前先清空畫面
+    chatWindow.innerHTML = ""; // 更新前清空畫面
+
     snapshot.forEach((doc) => {
         const data = doc.data();
 
-        // 建立一條新訊息的 HTML 元素
+        // 計算時間，若剛送出(伺服器還在算時間)則顯示傳送中
+        const timeString = data.createdAt
+            ? new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            : '傳送中...';
+
+        // 建立訊息 DOM 元素
         const messageElement = document.createElement("div");
-        messageElement.style.marginBottom = "8px";
-
-        // 如果是剛送出的訊息，伺服器時間可能還在計算(null)，這裡做個簡單防呆
-        const timeString = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString() : '傳送中...';
-
+        messageElement.classList.add("message-item");
         messageElement.innerHTML = `
-      <span style="color: gray; font-size: 0.8em;">[${timeString}]</span>
-      <strong>${data.sender || '匿名訪客'}:</strong> 
-      <span>${data.text}</span>
+      <span class="message-time">[${timeString}]</span>
+      <span class="message-sender">${data.sender || '匿名訪客'}:</span> 
+      <span class="message-text">${data.text}</span>
     `;
 
         chatWindow.appendChild(messageElement);
     });
-    // 自動往下捲動到底部
+
+    // 讓聊天室捲軸永遠保持在最底部
     chatWindow.scrollTop = chatWindow.scrollHeight;
 });
 
-// 6. 實作「送出訊息」功能 (寫入)
-sendBtn.addEventListener("click", async () => {
+// 6. 送出訊息的共用函數
+async function sendMessage() {
     const text = messageInput.value.trim();
-    if (text === "") return; // 如果沒打字就不執行
+    if (text === "") return; // 防呆：空訊息不送出
 
-    // 先清空輸入框，讓使用者感覺反應很快
-    messageInput.value = "";
+    messageInput.value = ""; // 先清空輸入框，提升使用者體驗
 
     try {
-        // 寫入資料到 'messages' 集合
         await addDoc(collection(db, "messages"), {
             text: text,
             sender: "測試員",
-            createdAt: serverTimestamp() // 使用 Firebase 伺服器時間
+            createdAt: serverTimestamp()
         });
     } catch (error) {
         console.error("發送失敗: ", error);
-        alert("訊息發送失敗，請檢查主控台錯誤訊息。");
+        alert("發送失敗，請打開 F12 Console 查看詳細錯誤。");
     }
-});
+}
 
-// 讓使用者按 Enter 鍵也能送出
+// 7. 綁定按鈕點擊與 Enter 鍵事件
+sendBtn.addEventListener("click", sendMessage);
+
 messageInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
-        sendBtn.click();
+        sendMessage();
     }
 });

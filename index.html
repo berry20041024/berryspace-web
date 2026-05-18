@@ -1,8 +1,29 @@
-<div id="chat-window"
-    style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-</div>
+<!DOCTYPE html>
+<html lang="zh-TW">
 
-<div id="input-area">
-    <input type="text" id="message-input" placeholder="輸入你想說的話..." style="width: 70%; padding: 5px;">
-    <button id="send-btn" style="padding: 5px 15px;">送出</button>
-</div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界頻道聊天室</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="chat-container">
+        <h2>💬 世界頻道</h2>
+
+        <div id="chat-window">
+        </div>
+
+        <div id="input-area">
+            <input type="text" id="message-input" placeholder="輸入你想說的話..." autocomplete="off">
+            <button id="send-btn">送出</button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+
+</body>
+
+</html>
