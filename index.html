@@ -10,12 +10,19 @@
 </head>
 
 <body>
+    <div class="scanline"></div>
+
     <div class="console-container">
         <h1 class="main-title">BerrySpace</h1>
         <p>資料庫狀態：<span id="db-status">連線中...</span></p>
 
         <input type="text" id="userInput" placeholder="輸入要存入雲端的數據...">
         <button id="saveBtn" class="project-card">傳送至 Firebase</button>
+
+        <div class="terminal-window">
+            <div class="terminal-header">📥 LIVE DATASTREAM // 雲端即時日誌</div>
+            <div id="log-display">等待接收雲端數據流...</div>
+        </div>
     </div>
 
     <script type="module" src="script.js"></script>

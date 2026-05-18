@@ -132,3 +132,56 @@ input[type="text"]:focus {
     box-shadow: 0 0 20px var(--primary-cyan);
     transform: scale(1.05);
 }
+
+/* 終端機日誌視窗樣式 */
+.terminal-window {
+    margin-top: 30px;
+    background: rgba(5, 5, 10, 0.8);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    border-radius: 6px;
+    text-align: left;
+    box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+.terminal-header {
+    background: rgba(0, 255, 255, 0.1);
+    padding: 8px 15px;
+    font-size: 0.8em;
+    color: var(--primary-cyan);
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    letter-spacing: 1px;
+}
+
+#log-display {
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.9em;
+    line-height: 1.6;
+    color: #a6e3a1;
+    /* 經典黑客綠 */
+}
+
+.log-item {
+    margin-bottom: 8px;
+    border-left: 2px solid var(--primary-magenta);
+    padding-left: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+.log-time {
+    color: #89b4fa;
+    margin-right: 10px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
