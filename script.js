@@ -1,7 +1,17 @@
+// 1. 引入 Firebase 核心與 Firestore 模組 (加入 serverTimestamp)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-// 新增引入 query, orderBy, limit, onSnapshot
-import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    onSnapshot,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// 2. 你的專屬 Firebase 設定檔
 const firebaseConfig = {
     apiKey: "AIzaSyC458PR1_J-nR0dCo7wxadj8Ov0qdIsFOY",
     authDomain: "berryspace-database.firebaseapp.com",
@@ -12,60 +22,68 @@ const firebaseConfig = {
     measurementId: "G-08B6T0V1D1"
 };
 
+// 3. 初始化 Firebase 與 Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-document.getElementById('db-status').innerText = "連線成功，系統運作中";
+// 4. 取得畫面的 DOM 元素 (請確保 HTML 中有這些 ID)
+const chatWindow = document.getElementById("chat-window");
+const messageInput = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
 
-// ==================== [寫入資料邏輯] ====================
-const saveBtn = document.getElementById('saveBtn');
-saveBtn.addEventListener('click', async () => {
-    const text = document.getElementById('userInput').value;
-    if (!text) { alert("請先輸入一些數據！"); return; }
+// 5. 實作「即時監聽」功能 (讀取)
+// 這裡使用了你引入的 limit，只抓取最新的 50 筆訊息，並依照時間舊到新排序
+const messagesRef = collection(db, "messages");
+const q = query(messagesRef, orderBy("createdAt", "asc"), limit(50));
 
-    try {
-        await addDoc(collection(db, "terminal_logs"), {
-            content: text,
-            timestamp: new Date()
-        });
-        document.getElementById('userInput').value = '';
-    } catch (e) {
-        console.error("儲存失敗: ", e);
-    }
-});
-
-// ==================== [即時讀取資料邏輯] ====================
-// 1. 建立一個查詢：目標是 terminal_logs 集合，按照時間戳記「降冪」排序（最新的在上面），並且只連線最新的 5 筆
-const q = query(collection(db, "terminal_logs"), orderBy("timestamp", "desc"), limit(5));
-
-// 2. 啟動即時監聽水管
 onSnapshot(q, (snapshot) => {
-    const logDisplay = document.getElementById('log-display');
-    logDisplay.innerHTML = ''; // 每次雲端有變動時，清空舊畫面重新渲染最新的 5 筆
-
-    if (snapshot.empty) {
-        logDisplay.innerHTML = '<div>雲端目前沒有任何日誌紀錄。</div>';
-        return;
-    }
-
-    // 迴圈跑出每一筆文件
+    chatWindow.innerHTML = ""; // 每次更新前先清空畫面
     snapshot.forEach((doc) => {
         const data = doc.data();
 
-        // 處理時間格式
-        let timeString = "未知時間";
-        if (data.timestamp) {
-            const date = data.timestamp.toDate(); // 將 Firebase 的 Timestamp 轉為 JS Date 物件
-            timeString = date.toLocaleTimeString(); // 取得本地時間字串 (如 下午6:45:00)
-        }
+        // 建立一條新訊息的 HTML 元素
+        const messageElement = document.createElement("div");
+        messageElement.style.marginBottom = "8px";
 
-        // 組合 HTML 結構
-        const logHtml = `
-            <div class="log-item">
-                <span class="log-time">[${timeString}]</span>
-                <span class="log-content">${data.content}</span>
-            </div>
-        `;
-        logDisplay.innerHTML += logHtml;
+        // 如果是剛送出的訊息，伺服器時間可能還在計算(null)，這裡做個簡單防呆
+        const timeString = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString() : '傳送中...';
+
+        messageElement.innerHTML = `
+      <span style="color: gray; font-size: 0.8em;">[${timeString}]</span>
+      <strong>${data.sender || '匿名訪客'}:</strong> 
+      <span>${data.text}</span>
+    `;
+
+        chatWindow.appendChild(messageElement);
     });
+    // 自動往下捲動到底部
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+});
+
+// 6. 實作「送出訊息」功能 (寫入)
+sendBtn.addEventListener("click", async () => {
+    const text = messageInput.value.trim();
+    if (text === "") return; // 如果沒打字就不執行
+
+    // 先清空輸入框，讓使用者感覺反應很快
+    messageInput.value = "";
+
+    try {
+        // 寫入資料到 'messages' 集合
+        await addDoc(collection(db, "messages"), {
+            text: text,
+            sender: "測試員",
+            createdAt: serverTimestamp() // 使用 Firebase 伺服器時間
+        });
+    } catch (error) {
+        console.error("發送失敗: ", error);
+        alert("訊息發送失敗，請檢查主控台錯誤訊息。");
+    }
+});
+
+// 讓使用者按 Enter 鍵也能送出
+messageInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+        sendBtn.click();
+    }
 });
