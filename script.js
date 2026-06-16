@@ -31,7 +31,7 @@ let shakeIntensity = 0;
 const currentWeapon = {
     name: 'pistol',
     fireMode: 'semi-auto',   // 'semi-auto' | 'full-auto'
-    fireRateMs: 133,         // 連射間隔（8幀 @ 60fps）
+    fireRateRPM: 60,         // 射速（每分鐘發數），60 = 每秒1發
     semiAutoDelayMs: 400,    // 半自動：按住後需等待多久才開始連射
     maxMagazineAmmo: 13,
     reloadTimeMs: 1500,
@@ -292,12 +292,12 @@ function handleShooting(now) {
         // 半自動：按住後需等待 semiAutoDelayMs 才開始連射
         const holdDuration = now - mouseDownStartTime;
         if (holdDuration < currentWeapon.semiAutoDelayMs) return;
-        if (now - lastFiredTime > currentWeapon.fireRateMs && canFire) {
+        if (now - lastFiredTime > 60000 / currentWeapon.fireRateRPM && canFire) {
             fireProjectile(now);
         }
     } else {
         // 全自動：直接依射速連射
-        if (now - lastFiredTime > currentWeapon.fireRateMs && canFire) {
+        if (now - lastFiredTime > 60000 / currentWeapon.fireRateRPM && canFire) {
             fireProjectile(now);
         }
     }
