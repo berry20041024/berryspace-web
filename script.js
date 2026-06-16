@@ -181,8 +181,10 @@ let lockedEnemy = null;
 
 // === 功能函式 ===
 
+const ammoTextEl = document.getElementById('ammo-text');
+
 function updateUI() {
-    ammoEl.innerHTML = `${currentMagazineAmmo} / ∞`;
+    ammoTextEl.innerHTML = `${currentMagazineAmmo} / ∞`;
 }
 
 function updateLockOn() {
