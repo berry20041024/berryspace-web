@@ -42,7 +42,7 @@ const weapons = [
     {
         name: 'm4',
         fireMode: 'full-auto',
-        fireRateRPM: 700,
+        fireRateRPM: 950,
         semiAutoDelayMs: 0,
         maxMagazineAmmo: 30,
         reloadTimeMs: 2500,
