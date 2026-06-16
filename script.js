@@ -27,23 +27,33 @@ let gameRunning = false;
 let shakeTimeMs = 0;
 let shakeIntensity = 0;
 
-// === 彈藥與手槍設定 ===
-const maxMagazineAmmo = 13;
-let currentMagazineAmmo = 13;
+// === 武器設定 ===
+const currentWeapon = {
+    name: 'pistol',
+    fireMode: 'semi-auto',   // 'semi-auto' | 'full-auto'
+    fireRateMs: 133,         // 連射間隔（8幀 @ 60fps）
+    semiAutoDelayMs: 400,    // 半自動：按住後需等待多久才開始連射
+    maxMagazineAmmo: 13,
+    reloadTimeMs: 1500,
+};
+
+let currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
 let isReloading = false;
 let reloadStartTime = 0;
-const pistolReloadTimeMs = 1500;
-
-// 射擊冷卻：以毫秒計算，不依賴幀數（8幀 @ 60fps ≈ 133ms）
-const fireRateMs = 133;
 let lastFiredTime = 0;
+
+// 半自動射擊狀態追蹤
+let wasMouseDown = false;       // 上一幀滑鼠是否按下
+let mouseDownStartTime = 0;     // 本次按下的起始時間
 
 // 按鍵與滑鼠追蹤
 const keys = { w: false, a: false, s: false, d: false };
 const mouse = { x: canvas.width / 2, y: canvas.height / 2, isDown: false };
 
 window.addEventListener('keydown', (e) => {
-    if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = true;
+    const key = e.key.toLowerCase();
+    if (keys.hasOwnProperty(key)) keys[key] = true;
+    if (key === 'r') startReload();
 });
 window.addEventListener('keyup', (e) => {
     if (keys.hasOwnProperty(e.key.toLowerCase())) keys[e.key.toLowerCase()] = false;
@@ -69,7 +79,7 @@ class Player {
 
         // 換彈時的進度白圈
         if (isReloading) {
-            const progress = (Date.now() - reloadStartTime) / pistolReloadTimeMs;
+            const progress = (Date.now() - reloadStartTime) / currentWeapon.reloadTimeMs;
             if (progress >= 1) {
                 finishReload();
             } else {
@@ -221,7 +231,7 @@ function drawLockReticle(enemy) {
 }
 
 function startReload() {
-    if (isReloading || currentMagazineAmmo === maxMagazineAmmo) return;
+    if (isReloading || currentMagazineAmmo === currentWeapon.maxMagazineAmmo) return;
     isReloading = true;
     reloadStartTime = Date.now();
     updateUI();
@@ -229,33 +239,67 @@ function startReload() {
 
 function finishReload() {
     isReloading = false;
-    currentMagazineAmmo = maxMagazineAmmo;
+    currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
     updateUI();
 }
 
+// 實際發射一顆子彈的共用邏輯
+function fireProjectile(now) {
+    currentMagazineAmmo--;
+    updateUI();
+
+    if (currentMagazineAmmo === 0) {
+        startReload();
+    }
+
+    let angle;
+    if (lockedEnemy) {
+        angle = Math.atan2(lockedEnemy.y - player.y, lockedEnemy.x - player.x);
+    } else {
+        angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    }
+
+    const bulletVelocity = { x: Math.cos(angle) * 15, y: Math.sin(angle) * 15 };
+    projectiles.push(new Projectile(player.x, player.y, 5, '#ffff00', bulletVelocity));
+    lastFiredTime = now;
+
+    // 開火晃動
+    shakeTimeMs = 80;
+    shakeIntensity = 4;
+}
+
 function handleShooting(now) {
-    if (mouse.isDown && now - lastFiredTime > fireRateMs && currentMagazineAmmo > 0 && !isReloading) {
-        currentMagazineAmmo--;
-        updateUI();
+    const canFire = currentMagazineAmmo > 0 && !isReloading;
 
-        if (currentMagazineAmmo === 0) {
-            startReload();
+    if (!mouse.isDown) {
+        // 滑鼠放開：重設按壓狀態
+        wasMouseDown = false;
+        return;
+    }
+
+    if (!wasMouseDown) {
+        // 滑鼠剛按下：立即開第一槍
+        wasMouseDown = true;
+        mouseDownStartTime = now;
+        if (canFire) {
+            fireProjectile(now);
         }
+        return;
+    }
 
-        let angle;
-        if (lockedEnemy) {
-            angle = Math.atan2(lockedEnemy.y - player.y, lockedEnemy.x - player.x);
-        } else {
-            angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    // 滑鼠持續按住
+    if (currentWeapon.fireMode === 'semi-auto') {
+        // 半自動：按住後需等待 semiAutoDelayMs 才開始連射
+        const holdDuration = now - mouseDownStartTime;
+        if (holdDuration < currentWeapon.semiAutoDelayMs) return;
+        if (now - lastFiredTime > currentWeapon.fireRateMs && canFire) {
+            fireProjectile(now);
         }
-
-        const bulletVelocity = { x: Math.cos(angle) * 15, y: Math.sin(angle) * 15 };
-        projectiles.push(new Projectile(player.x, player.y, 5, '#ffff00', bulletVelocity));
-        lastFiredTime = now;
-
-        // 開火晃動
-        shakeTimeMs = 80;
-        shakeIntensity = 4;
+    } else {
+        // 全自動：直接依射速連射
+        if (now - lastFiredTime > currentWeapon.fireRateMs && canFire) {
+            fireProjectile(now);
+        }
     }
 }
 
@@ -401,9 +445,11 @@ window.restartGame = function () {
     lastTimestamp = 0;
     lastSpawnTime = -spawnIntervalMs;
     shakeTimeMs = 0;
-    currentMagazineAmmo = maxMagazineAmmo;
+    currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
     isReloading = false;
     lockedEnemy = null;
+    wasMouseDown = false;
+    mouseDownStartTime = 0;
 
     scoreEl.innerHTML = `分數: ${score}`;
     updateUI();
