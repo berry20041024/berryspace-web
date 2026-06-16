@@ -27,24 +27,58 @@ let gameRunning = false;
 let shakeTimeMs = 0;
 let shakeIntensity = 0;
 
-// === 武器設定 ===
-const currentWeapon = {
-    name: 'pistol',
-    fireMode: 'semi-auto',   // 'semi-auto' | 'full-auto'
-    fireRateRPM: 60,         // 射速（每分鐘發數），60 = 每秒1發
-    semiAutoDelayMs: 400,    // 半自動：按住後需等待多久才開始連射
-    maxMagazineAmmo: 13,
-    reloadTimeMs: 1500,
-};
+// === 武器系統 ===
+const weapons = [
+    {
+        name: 'pistol',
+        fireMode: 'semi-auto',
+        fireRateRPM: 60,
+        semiAutoDelayMs: 400,
+        maxMagazineAmmo: 13,
+        reloadTimeMs: 1500,
+        icon: 'public/assets/pistol.png',
+        currentAmmo: 13,        // 各武器獨立追蹤彈藥
+    },
+    {
+        name: 'm4',
+        fireMode: 'full-auto',
+        fireRateRPM: 700,
+        semiAutoDelayMs: 0,
+        maxMagazineAmmo: 30,
+        reloadTimeMs: 2500,
+        icon: 'public/assets/m4.png',
+        currentAmmo: 30,
+    },
+];
 
-let currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
+let currentWeaponIndex = 0;
+let currentWeapon = weapons[currentWeaponIndex];
+let currentMagazineAmmo = currentWeapon.currentAmmo;
 let isReloading = false;
 let reloadStartTime = 0;
 let lastFiredTime = 0;
 
 // 半自動射擊狀態追蹤
-let wasMouseDown = false;       // 上一幀滑鼠是否按下
-let mouseDownStartTime = 0;     // 本次按下的起始時間
+let wasMouseDown = false;
+let mouseDownStartTime = 0;
+
+// 切換武器
+function switchWeapon(direction) {
+    // 儲存當前武器的彈藥狀態
+    weapons[currentWeaponIndex].currentAmmo = currentMagazineAmmo;
+
+    // 切換 index（循環）
+    currentWeaponIndex = (currentWeaponIndex + direction + weapons.length) % weapons.length;
+    currentWeapon = weapons[currentWeaponIndex];
+
+    // 載入新武器狀態
+    currentMagazineAmmo = currentWeapon.currentAmmo;
+    isReloading = false;
+    lastFiredTime = 0;
+    wasMouseDown = false;
+
+    updateUI();
+}
 
 // 按鍵與滑鼠追蹤
 const keys = { w: false, a: false, s: false, d: false };
@@ -61,6 +95,11 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
 window.addEventListener('mousedown', () => { mouse.isDown = true; });
 window.addEventListener('mouseup', () => { mouse.isDown = false; });
+window.addEventListener('wheel', (e) => {
+    if (!gameRunning) return;
+    e.preventDefault();
+    switchWeapon(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
 
 // === 物件類別定義 ===
 
@@ -192,9 +231,12 @@ let lockedEnemy = null;
 // === 功能函式 ===
 
 const ammoTextEl = document.getElementById('ammo-text');
+const weaponIconEl = document.getElementById('weapon-icon');
 
 function updateUI() {
     ammoTextEl.innerHTML = `${currentMagazineAmmo} / ∞`;
+    weaponIconEl.src = currentWeapon.icon;
+    weaponIconEl.alt = currentWeapon.name;
 }
 
 function updateLockOn() {
@@ -445,6 +487,11 @@ window.restartGame = function () {
     lastTimestamp = 0;
     lastSpawnTime = -spawnIntervalMs;
     shakeTimeMs = 0;
+
+    // 重設所有武器彈藥
+    weapons.forEach(w => { w.currentAmmo = w.maxMagazineAmmo; });
+    currentWeaponIndex = 0;
+    currentWeapon = weapons[0];
     currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
     isReloading = false;
     lockedEnemy = null;
