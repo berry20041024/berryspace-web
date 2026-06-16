@@ -5,6 +5,8 @@ body {
     background-color: #111;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+    /* 防止連點時選取到文字 */
 }
 
 /* 左上角 UI 容器 */
@@ -14,10 +16,8 @@ body {
     left: 20px;
     color: white;
     pointer-events: none;
-    /* 讓滑鼠點擊可以穿透 UI，不會擋住射擊 */
 }
 
-/* 分數顯示 */
 #score {
     font-size: 32px;
     font-weight: bold;
@@ -25,17 +25,15 @@ body {
     text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
-/* 操作說明 */
 #controls {
     margin-top: 10px;
     font-size: 14px;
     color: #aaa;
+    line-height: 1.6;
 }
 
-/* 遊戲結束彈窗 */
 #game-over {
     display: none;
-    /* 預設隱藏 */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -46,9 +44,9 @@ body {
     border: 2px solid #ff3333;
     text-align: center;
     color: white;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
 }
 
-/* 按鈕樣式 */
 button {
     margin-top: 20px;
     padding: 10px 25px;
