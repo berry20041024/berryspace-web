@@ -142,7 +142,7 @@ window.addEventListener('mousedown', (event) => {
 
 // 生成敵人邏輯
 function spawnEnemies() {
-    if (frames % 60 === 0) { // 每秒生成一隻 (假設 60FPS)
+    if (frames % 300 === 0) { // 每秒生成一隻 (假設 60FPS)
         const radius = Math.random() * (30 - 10) + 10;
         let x, y;
         if (Math.random() < 0.5) {
