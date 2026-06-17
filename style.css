@@ -2,19 +2,194 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #111;
+    background-color: #000;
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
 }
 
-/* 隱藏系統鼠標，改由 canvas 繪製準心 */
 canvas {
-    cursor: none;
     display: block;
 }
 
-/* ── 左上角 UI ──────────────────────────────────────────────────────────── */
+/* 遊戲中隱藏系統鼠標，主頁 / 裝備頁保留 */
+canvas.in-game {
+    cursor: none;
+}
+
+/* ── 主頁（大廳）──────────────────────────────────────────────────────── */
+#home-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+#home-content {
+    text-align: center;
+    z-index: 21;
+}
+
+#home-title {
+    font-size: 72px;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 6px;
+    background: linear-gradient(135deg, #00d4ff 0%, #7b61ff 50%, #ff3366 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.35));
+}
+
+#home-subtitle {
+    font-size: 17px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 18px 0 48px 0;
+    letter-spacing: 3px;
+}
+
+#home-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.btn-home-primary {
+    background: linear-gradient(135deg, #00d4ff, #0077ee);
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 16px 72px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 4px;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.3);
+}
+
+.btn-home-primary:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.55);
+}
+
+.btn-home-secondary {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    padding: 12px 40px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.25s ease;
+}
+
+.btn-home-secondary:hover {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── 裝備面板 ──────────────────────────────────────────────────────────── */
+#loadout-screen {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 25;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+}
+
+#loadout-title {
+    color: #fff;
+    font-size: 32px;
+    letter-spacing: 4px;
+    margin: 0;
+    text-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
+}
+
+#weapon-cards {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.weapon-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 200px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.weapon-card:hover {
+    border-color: rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 24px rgba(0, 212, 255, 0.15);
+    transform: translateY(-3px);
+}
+
+.weapon-card img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    margin-bottom: 14px;
+}
+
+.weapon-card h3 {
+    color: #fff;
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.weapon-card .fire-mode-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.badge-semi {
+    background: rgba(0, 180, 255, 0.15);
+    color: #00d4ff;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.badge-auto {
+    background: rgba(255, 120, 0, 0.15);
+    color: #ff8800;
+    border: 1px solid rgba(255, 120, 0, 0.3);
+}
+
+.weapon-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.weapon-stat span:last-child {
+    color: #ccc;
+    font-weight: 600;
+}
+
+/* ── 遊戲 HUD ─────────────────────────────────────────────────────────── */
 #ui-container {
     position: absolute;
     top: 20px;
@@ -23,7 +198,6 @@ canvas {
     pointer-events: none;
 }
 
-/* 分數 */
 #score {
     font-size: 32px;
     font-weight: bold;
@@ -31,7 +205,6 @@ canvas {
     text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
-/* 血條容器 */
 #health-container {
     display: flex;
     align-items: center;
@@ -68,7 +241,6 @@ canvas {
     min-width: 28px;
 }
 
-/* 操作說明 */
 #controls {
     margin-top: 10px;
     font-size: 13px;
@@ -76,7 +248,7 @@ canvas {
     line-height: 1.7;
 }
 
-/* ── 頂部中央波次顯示 ─────────────────────────────────────────────────── */
+/* 波次 */
 #wave-display {
     position: absolute;
     top: 20px;
@@ -90,7 +262,7 @@ canvas {
     text-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
 }
 
-/* ── 右下角彈藥 UI ──────────────────────────────────────────────────────── */
+/* 彈藥 */
 #ammo-container {
     position: absolute;
     bottom: 20px;
@@ -132,11 +304,11 @@ canvas {
     text-align: center;
     color: white;
     box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+    z-index: 30;
 }
 
 /* ── 按鈕 ────────────────────────────────────────────────────────────────── */
 button {
-    margin-top: 20px;
     padding: 10px 25px;
     font-size: 18px;
     background: #ff3333;
@@ -149,5 +321,16 @@ button {
 
 button:hover {
     background: #ff6666;
+    transform: scale(1.05);
+}
+
+.btn-lobby {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 16px;
+}
+
+.btn-lobby:hover {
+    background: rgba(255, 255, 255, 0.08);
     transform: scale(1.05);
 }

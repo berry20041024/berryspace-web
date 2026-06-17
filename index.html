@@ -10,10 +10,28 @@
 
 <body>
 
-    <!-- 左上角 UI：分數、血條、操作說明 -->
-    <div id="ui-container">
-        <div id="score">分數: 0</div>
+    <!-- ====== 主頁（大廳）====== -->
+    <div id="home-screen">
+        <div id="home-content">
+            <h1 id="home-title">純粹生存戰</h1>
+            <p id="home-subtitle">在無盡的波次中生存下去</p>
+            <div id="home-buttons">
+                <button class="btn-home-primary" onclick="startGame()">加入戰鬥</button>
+                <button class="btn-home-secondary" onclick="openLoadout()">更換裝備</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- ====== 裝備面板 ====== -->
+    <div id="loadout-screen">
+        <h2 id="loadout-title">裝備庫</h2>
+        <div id="weapon-cards"></div>
+        <button class="btn-home-secondary" onclick="closeLoadout()">← 返回大廳</button>
+    </div>
+
+    <!-- ====== 遊戲 HUD（預設隱藏）====== -->
+    <div id="ui-container" style="display:none;">
+        <div id="score">分數: 0</div>
         <div id="health-container">
             <span id="health-label">HP</span>
             <div id="health-bar-bg">
@@ -21,28 +39,28 @@
             </div>
             <span id="health-text">100</span>
         </div>
-
         <div id="controls">
             [W][A][S][D] 移動 | [滑鼠左鍵] 射擊 | [R] 換彈 | [滾輪] 切換武器<br>
             <span style="color:#00ff00;">靠近敵人自動鎖定</span>
         </div>
     </div>
 
-    <!-- 頂部中央波次顯示 -->
-    <div id="wave-display">WAVE -</div>
+    <div id="wave-display" style="display:none;">WAVE -</div>
 
-    <!-- 右下角彈藥 UI -->
-    <div id="ammo-container">
+    <div id="ammo-container" style="display:none;">
         <img id="weapon-icon" src="public/assets/pistol.png" alt="weapon icon">
         <div id="ammo-text">13 / ∞</div>
     </div>
 
-    <!-- 遊戲結束 -->
+    <!-- ====== 遊戲結束 ====== -->
     <div id="game-over">
         <h1 style="margin: 0 0 10px 0; color: #ff3333;">戰亡</h1>
         <p id="final-score" style="font-size: 24px; margin: 0;">最終分數: 0</p>
         <p id="final-wave" style="font-size: 18px; margin: 8px 0 0 0; color: #aaa;">最終波次: 1</p>
-        <button onclick="restartGame()">重新部署</button>
+        <div style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+            <button onclick="startGame()">重新部署</button>
+            <button class="btn-lobby" onclick="backToLobby()">回到大廳</button>
+        </div>
     </div>
 
     <canvas id="gameCanvas"></canvas>

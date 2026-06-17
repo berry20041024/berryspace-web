@@ -22,9 +22,17 @@ const healthBarFillEl = document.getElementById('health-bar-fill');
 const healthTextEl    = document.getElementById('health-text');
 const waveDisplayEl   = document.getElementById('wave-display');
 
+// 主頁 / 裝備面板
+const homeScreenEl    = document.getElementById('home-screen');
+const loadoutScreenEl = document.getElementById('loadout-screen');
+const weaponCardsEl   = document.getElementById('weapon-cards');
+const uiContainerEl   = document.getElementById('ui-container');
+const ammoContainerEl = document.getElementById('ammo-container');
+
 // ─── Game State ──────────────────────────────────────────────────────────────
 
 let animationId;
+let homeAnimId;
 let score = 0;
 let frames = 0;
 let lastTimestamp = 0;
@@ -689,6 +697,151 @@ function updateWave(now) {
     }
 }
 
+// ─── Home Screen (Lobby) ──────────────────────────────────────────────────────
+
+// 大廳背景漂浮粒子
+const homeParticles = [];
+
+function initHomeParticles() {
+    homeParticles.length = 0;
+    for (let i = 0; i < 80; i++) {
+        homeParticles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 1.8 + 0.5,
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: (Math.random() - 0.5) * 0.25,
+            alpha: Math.random() * 0.4 + 0.08,
+        });
+    }
+}
+
+function animateHome() {
+    homeAnimId = requestAnimationFrame(animateHome);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    homeParticles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = '#00d4ff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+function showHomeScreen() {
+    // 停止遊戲迴圈
+    cancelAnimationFrame(animationId);
+    gameRunning = false;
+
+    // 顯示主頁，隱藏遊戲 HUD
+    homeScreenEl.style.display = 'flex';
+    loadoutScreenEl.style.display = 'none';
+    gameOverEl.style.display = 'none';
+    uiContainerEl.style.display = 'none';
+    waveDisplayEl.style.display = 'none';
+    ammoContainerEl.style.display = 'none';
+    canvas.classList.remove('in-game');
+
+    // 啟動大廳背景動畫
+    initHomeParticles();
+    animateHome();
+}
+
+window.startGame = function () {
+    // 停止大廳動畫
+    cancelAnimationFrame(homeAnimId);
+
+    // 隱藏主頁 / 裝備，顯示遊戲 HUD
+    homeScreenEl.style.display = 'none';
+    loadoutScreenEl.style.display = 'none';
+    gameOverEl.style.display = 'none';
+    uiContainerEl.style.display = '';
+    waveDisplayEl.style.display = '';
+    ammoContainerEl.style.display = '';
+    canvas.classList.add('in-game');
+
+    // 重設遊戲狀態
+    player      = new Player(canvas.width / 2, canvas.height / 2, 15, '#00d4ff');
+    projectiles = []; enemies = []; particles = [];
+    score = 0; frames = 0; lastTimestamp = 0; shakeTimeMs = 0;
+
+    weapons.forEach(w => { w.currentAmmo = w.maxMagazineAmmo; });
+    currentWeaponIndex = 0;
+    currentWeapon      = weapons[0];
+    currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
+    isReloading = false; lastFiredTime = 0;
+    wasMouseDown = false; mouseDownStartTime = 0;
+    lockedEnemy = null;
+
+    playerHP = PLAYER_MAX_HP;
+    playerInvincibleUntil = 0;
+    hurtAlpha = 0;
+    muzzleFlashTime = -Infinity;
+
+    waveNumber            = 0;
+    waveState             = 'intermission';
+    intermissionStartTime = -Infinity;
+    waveAnnouncementStart = -Infinity;
+
+    scoreEl.innerHTML = `分數: ${score}`;
+    waveDisplayEl.textContent = 'WAVE -';
+    updateUI();
+    updateHealthBar();
+
+    gameRunning = true;
+    animate();
+};
+
+window.backToLobby = function () {
+    cancelAnimationFrame(animationId);
+    gameRunning = false;
+    showHomeScreen();
+};
+
+// ─── Loadout (Equipment) Panel ────────────────────────────────────────────────
+
+window.openLoadout = function () {
+    homeScreenEl.style.display = 'none';
+    loadoutScreenEl.style.display = 'flex';
+    generateLoadoutCards();
+};
+
+window.closeLoadout = function () {
+    loadoutScreenEl.style.display = 'none';
+    homeScreenEl.style.display = 'flex';
+};
+
+function generateLoadoutCards() {
+    weaponCardsEl.innerHTML = '';
+    weapons.forEach(w => {
+        const isAuto = w.fireMode === 'full-auto';
+        const card = document.createElement('div');
+        card.className = 'weapon-card';
+        card.innerHTML = `
+            <img src="${w.icon}" alt="${w.name}">
+            <h3>${w.name.toUpperCase()}</h3>
+            <span class="fire-mode-badge ${isAuto ? 'badge-auto' : 'badge-semi'}">
+                ${isAuto ? '全自動' : '半自動'}
+            </span>
+            <div class="weapon-stat"><span>射速</span><span>${w.fireRateRPM} RPM</span></div>
+            <div class="weapon-stat"><span>彈匣</span><span>${w.maxMagazineAmmo} 發</span></div>
+            <div class="weapon-stat"><span>傷害</span><span>${w.bulletDamage}</span></div>
+            <div class="weapon-stat"><span>換彈</span><span>${(w.reloadTimeMs / 1000).toFixed(1)}s</span></div>
+        `;
+        weaponCardsEl.appendChild(card);
+    });
+}
+
 // ─── Main Game Loop ───────────────────────────────────────────────────────────
 
 function drawGameScene(timestamp) {
@@ -840,43 +993,6 @@ function drawGameScene(timestamp) {
     drawCrosshair();
 }
 
-// ─── Restart ─────────────────────────────────────────────────────────────────
-
-window.restartGame = function () {
-    cancelAnimationFrame(animationId);
-
-    player      = new Player(canvas.width / 2, canvas.height / 2, 15, '#00d4ff');
-    projectiles = []; enemies = []; particles = [];
-    score = 0; frames = 0; lastTimestamp = 0; shakeTimeMs = 0;
-
-    weapons.forEach(w => { w.currentAmmo = w.maxMagazineAmmo; });
-    currentWeaponIndex = 0;
-    currentWeapon      = weapons[0];
-    currentMagazineAmmo = currentWeapon.maxMagazineAmmo;
-    isReloading = false; lastFiredTime = 0;
-    wasMouseDown = false; mouseDownStartTime = 0;
-    lockedEnemy = null;
-
-    playerHP = PLAYER_MAX_HP;
-    playerInvincibleUntil = 0;
-    hurtAlpha = 0;
-    muzzleFlashTime = -Infinity;
-
-    waveNumber            = 0;
-    waveState             = 'intermission';
-    intermissionStartTime = -Infinity; // 讓第一波在首幀立即開始
-    waveAnnouncementStart = -Infinity;
-
-    scoreEl.innerHTML = `分數: ${score}`;
-    waveDisplayEl.textContent = 'WAVE -';
-    gameOverEl.style.display = 'none';
-    updateUI();
-    updateHealthBar();
-
-    gameRunning = true;
-    animate();
-};
-
 // ─── Animate ─────────────────────────────────────────────────────────────────
 
 function animate(timestamp = 0) {
@@ -886,8 +1002,4 @@ function animate(timestamp = 0) {
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 
-updateUI();
-updateHealthBar();
-waveDisplayEl.textContent = 'WAVE -';
-gameRunning = true;
-animate();
+showHomeScreen();
