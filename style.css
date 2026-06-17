@@ -1,4 +1,4 @@
-/* 重置預設樣式並隱藏卷軸 */
+/* ── Reset ─────────────────────────────────────────────────────────────── */
 body {
     margin: 0;
     padding: 0;
@@ -6,20 +6,24 @@ body {
     overflow: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
-    /* 防止快速連點選取到文字 */
 }
 
-/* 左上角 UI 容器 (分數、說明) */
+/* 隱藏系統鼠標，改由 canvas 繪製準心 */
+canvas {
+    cursor: none;
+    display: block;
+}
+
+/* ── 左上角 UI ──────────────────────────────────────────────────────────── */
 #ui-container {
     position: absolute;
     top: 20px;
     left: 20px;
     color: white;
     pointer-events: none;
-    /* 讓滑鼠點擊可以穿透 UI */
 }
 
-/* 分數顯示 */
+/* 分數 */
 #score {
     font-size: 32px;
     font-weight: bold;
@@ -27,15 +31,66 @@ body {
     text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
+/* 血條容器 */
+#health-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#health-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #aaa;
+    width: 22px;
+}
+
+#health-bar-bg {
+    width: 160px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#health-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #00cc33, #00ff44);
+    border-radius: 5px;
+    transition: width 0.1s ease, background 0.3s ease;
+}
+
+#health-text {
+    font-size: 14px;
+    color: #ccc;
+    min-width: 28px;
+}
+
 /* 操作說明 */
 #controls {
     margin-top: 10px;
-    font-size: 14px;
-    color: #aaa;
-    line-height: 1.6;
+    font-size: 13px;
+    color: #888;
+    line-height: 1.7;
 }
 
-/* 右下角彈藥介面 */
+/* ── 頂部中央波次顯示 ─────────────────────────────────────────────────── */
+#wave-display {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 3px;
+    pointer-events: none;
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+}
+
+/* ── 右下角彈藥 UI ──────────────────────────────────────────────────────── */
 #ammo-container {
     position: absolute;
     bottom: 20px;
@@ -50,14 +105,12 @@ body {
     pointer-events: none;
 }
 
-/* 武器圖示 */
 #weapon-icon {
     width: 64px;
     height: 64px;
     object-fit: contain;
 }
 
-/* 彈藥文字 */
 #ammo-text {
     color: white;
     font-size: 32px;
@@ -65,23 +118,23 @@ body {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-/* 遊戲結束彈窗 */
+/* ── 遊戲結束彈窗 ───────────────────────────────────────────────────────── */
 #game-over {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.85);
-    padding: 40px;
-    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.88);
+    padding: 40px 50px;
+    border-radius: 16px;
     border: 2px solid #ff3333;
     text-align: center;
     color: white;
-    box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+    box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
 }
 
-/* 按鈕樣式 */
+/* ── 按鈕 ────────────────────────────────────────────────────────────────── */
 button {
     margin-top: 20px;
     padding: 10px 25px;
